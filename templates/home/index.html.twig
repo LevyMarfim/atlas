@@ -1,0 +1,28 @@
+{# templates/home/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}PDF Upload{% endblock %}
+
+{% block body %}
+<div class="example-wrapper">
+    <h1>Upload a PDF File</h1>
+
+    {{ form_start(uploadForm) }}
+        {{ form_row(uploadForm.pdf_file) }}
+        {{ form_row(uploadForm.upload) }}
+    {{ form_end(uploadForm) }}
+
+    {# Display flash messages #}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

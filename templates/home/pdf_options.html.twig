@@ -1,0 +1,50 @@
+{# templates/home/pdf_options.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}PDF Options - {{ filename }}{% endblock %}
+
+{% block body %}
+<div class="example-wrapper">
+    <h1>PDF Options: {{ filename }}</h1>
+    
+    <div class="options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+        <div class="option-card" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
+            <h3>📄 View PDF</h3>
+            <p>View the PDF file in your browser</p>
+            <a href="{{ path('app_view_pdf', {'filename': filename}) }}" class="btn btn-primary">
+                View PDF
+            </a>
+        </div>
+        
+        <div class="option-card" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
+            <h3>📝 Extract Text</h3>
+            <p>Extract and view the text content from the PDF</p>
+            <a href="{{ path('app_extract_text', {'filename': filename}) }}" class="btn btn-success">
+                Extract Text
+            </a>
+        </div>
+    </div>
+
+    <div class="action-buttons" style="text-align: center; margin-top: 20px;">
+        <a href="{{ path('app_download_pdf', {'filename': filename}) }}" class="btn btn-secondary">
+            Download PDF
+        </a>
+        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
+            Upload Another PDF
+        </a>
+    </div>
+
+    {# Display flash messages #}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
