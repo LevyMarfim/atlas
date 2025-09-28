@@ -4,6 +4,7 @@
 namespace App\Controller;
 
 use App\Form\PdfUploadType;
+use App\Service\PdfTextExtractor;
 use Smalot\PdfParser\Parser;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -79,7 +80,7 @@ final class HomeController extends AbstractController
     }
 
     #[Route('/pdf/{filename}/extract-text', name: 'app_extract_text')]
-    public function extractText(string $filename): Response
+    public function extractText(string $filename, PdfTextExtractor $pdfExtractor, Request $request): Response
     {
         $pdfPath = $this->getParameter('pdf_directory').'/'.$filename;
         
@@ -87,32 +88,51 @@ final class HomeController extends AbstractController
             throw $this->createNotFoundException('The PDF file does not exist');
         }
 
-        $text = '';
-        $error = null;
+        $method = $request->query->get('method', 'auto');
+        $availableMethods = $pdfExtractor->getAvailableMethods();
 
-        try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($pdfPath);
-            $text = $pdf->getText();
-            
-            // Clean up the text - remove excessive whitespace
-            $text = preg_replace('/\s+/', ' ', $text);
-            $text = trim($text);
-            
-            if (empty($text)) {
-                $error = 'No text could be extracted from this PDF. The PDF might be image-based or scanned.';
-            }
-            
-        } catch (\Exception $e) {
-            $error = 'Error extracting text: ' . $e->getMessage();
+        $result = $pdfExtractor->extractText($pdfPath, $method);
+
+        // Safely access array keys with defaults
+        $text = $result['text'] ?? '';
+        $warnings = $result['warnings'] ?? [];
+        $methodUsed = $result['method_used'] ?? 'unknown';
+        $confidence = $result['confidence'] ?? 'none';
+        $metadata = $result['metadata'] ?? [];
+
+        // Calculate statistics
+        $wordCount = str_word_count($text);
+        $charCount = strlen($text);
+        $lineCount = substr_count($text, "\n") + 1;
+
+        // Prepare error message
+        $error = null;
+        if (!empty($warnings)) {
+            $error = is_array($warnings) ? implode(', ', $warnings) : $warnings;
         }
 
         return $this->render('home/extract_text.html.twig', [
             'filename' => $filename,
             'extractedText' => $text,
             'error' => $error,
-            'textLength' => strlen($text),
-            'wordCount' => str_word_count($text),
+            'textLength' => $charCount,
+            'wordCount' => $wordCount,
+            'lineCount' => $lineCount,
+            'methodUsed' => $methodUsed,
+            'confidence' => $confidence,
+            'metadata' => $metadata,
+            'availableMethods' => $availableMethods,
+            'currentMethod' => $method,
+        ]);
+    }
+
+    #[Route('/pdf/{filename}/extract-text/method', name: 'app_extract_text_method', methods: ['POST'])]
+    public function extractTextWithMethod(string $filename, PdfTextExtractor $pdfExtractor, Request $request): Response
+    {
+        $method = $request->request->get('method', 'auto');
+        return $this->redirectToRoute('app_extract_text', [
+            'filename' => $filename,
+            'method' => $method
         ]);
     }
 
@@ -129,7 +149,7 @@ final class HomeController extends AbstractController
     }
 
     #[Route('/pdf/{filename}/download-text', name: 'app_download_text')]
-    public function downloadText(string $filename): Response
+    public function downloadText(string $filename, PdfTextExtractor $pdfExtractor, Request $request): Response
     {
         $pdfPath = $this->getParameter('pdf_directory').'/'.$filename;
         
@@ -137,27 +157,22 @@ final class HomeController extends AbstractController
             throw $this->createNotFoundException('The PDF file does not exist');
         }
 
-        try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($pdfPath);
-            $text = $pdf->getText();
-            $text = preg_replace('/\s+/', ' ', $text);
-            $text = trim($text);
+        $method = $request->query->get('method', 'auto');
+        $result = $pdfExtractor->extractText($pdfPath, $method);
 
-            if (empty($text)) {
-                throw new \Exception('No text could be extracted');
-            }
+        // Safely access text
+        $text = $result['text'] ?? '';
 
-            $response = new Response($text);
-            $response->headers->set('Content-Type', 'text/plain');
-            $response->headers->set('Content-Disposition', 
-                'attachment; filename="' . pathinfo($filename, PATHINFO_FILENAME) . '.txt"');
-
-            return $response;
-
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Error extracting text: ' . $e->getMessage());
-            return $this->redirectToRoute('app_pdf_options', ['filename' => $filename]);
+        if (empty($text)) {
+            $this->addFlash('error', 'No text could be extracted from this PDF');
+            return $this->redirectToRoute('app_extract_text', ['filename' => $filename]);
         }
+
+        $response = new Response($text);
+        $response->headers->set('Content-Type', 'text/plain');
+        $response->headers->set('Content-Disposition', 
+            'attachment; filename="' . pathinfo($filename, PATHINFO_FILENAME) . '.txt"');
+
+        return $response;
     }
 }

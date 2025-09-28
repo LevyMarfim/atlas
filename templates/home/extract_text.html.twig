@@ -7,37 +7,170 @@
 <div class="example-wrapper">
     <h1>Extracted Text from: {{ filename }}</h1>
     
-    <div class="text-stats" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <strong>Statistics:</strong> 
-        {{ textLength }} characters, 
-        {{ wordCount }} words
-        {% if error %}
-            | <span style="color: #dc3545;">Error: {{ error }}</span>
-        {% endif %}
+    {# Extraction Method Selector #}
+    <div class="method-selector card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Extraction Method</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ path('app_extract_text_method', {'filename': filename}) }}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <select name="method" class="form-select" onchange="this.form.submit()">
+                            {% for key, label in availableMethods %}
+                                <option value="{{ key }}" {{ currentMethod == key ? 'selected' : '' }}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-{{ confidence == 'high' ? 'success' : (confidence == 'medium' ? 'warning' : 'danger') }}">
+                            Confidence: {{ confidence|upper }}
+                        </span>
+                    </div>
+                </div>
+            </form>
+            <small class="text-muted mt-2 d-block">
+                Method used: <strong>{{ methodUsed }}</strong>
+            </small>
+        </div>
+    </div>
+
+    {# Statistics #}
+    <div class="stats-row mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3>{{ wordCount }}</h3>
+                        <p class="text-muted mb-0">Words</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3>{{ textLength }}</h3>
+                        <p class="text-muted mb-0">Characters</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3>{{ lineCount }}</h3>
+                        <p class="text-muted mb-0">Lines</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3>
+                            {% if confidence == 'high' %}✅
+                            {% elseif confidence == 'medium' %}⚠️
+                            {% else %}❌
+                            {% endif %}
+                        </h3>
+                        <p class="text-muted mb-0">Quality</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {% if error %}
         <div class="alert alert-warning">
             <h4>Text Extraction Issue</h4>
             <p>{{ error }}</p>
-            <p>This PDF might be image-based or scanned. You'll need OCR (Optical Character Recognition) software to extract text from it.</p>
+            {% if confidence == 'none' %}
+                <p><strong>Try using the OCR method from the dropdown above for scanned PDFs.</strong></p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if extractedText is empty %}
+        <div class="alert alert-danger">
+            <h4>No Text Extracted</h4>
+            <p>No text could be extracted from this PDF using the current method.</p>
+            <ul>
+                <li>Try using a different extraction method from the dropdown</li>
+                <li>If this is a scanned PDF, use the OCR method</li>
+                <li>The PDF might be image-based or password protected</li>
+            </ul>
         </div>
     {% else %}
-        <div class="text-actions" style="margin-bottom: 20px;">
-            <a href="{{ path('app_download_text', {'filename': filename}) }}" class="btn btn-primary">
+        {# Action Buttons #}
+        <div class="action-buttons mb-4">
+            <a href="{{ path('app_download_text', {'filename': filename}) }}?method={{ currentMethod }}" 
+               class="btn btn-primary">
                 Download as Text File
             </a>
             <button onclick="copyToClipboard()" class="btn btn-secondary">
                 Copy to Clipboard
             </button>
+            {% if metadata is not empty %}
+                <button onclick="toggleMetadata()" class="btn btn-outline-info">
+                    Show Metadata
+                </button>
+            {% endif %}
         </div>
 
-        <div class="extracted-text" style="background: #f8f9fa; padding: 20px; border-radius: 5px; border: 1px solid #ddd; max-height: 600px; overflow-y: auto;">
-            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ extractedText }}</pre>
+        {# Metadata Panel #}
+        {% if metadata is not empty %}
+            <div id="metadataPanel" class="card mb-4" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">PDF Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for key, value in metadata %}
+                            <div class="col-md-12 mb-3">
+                                <strong>{{ key|title }}:</strong> 
+                                <div class="mt-1">
+                                    {% if value is iterable %}
+                                        {% if value is empty %}
+                                            <span class="text-muted">(empty)</span>
+                                        {% else %}
+                                            <div class="metadata-array">
+                                                {% for subkey, subvalue in value %}
+                                                    <div class="metadata-item">
+                                                        <span class="text-muted">{{ subkey }}:</span>
+                                                        {% if subvalue is iterable %}
+                                                            <pre class="d-inline"><code>{{ subvalue|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+                                                        {% else %}
+                                                            <span>{{ subvalue }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">{{ value }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {# Extracted Text #}
+        <div class="extracted-text card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Extracted Text</h5>
+                <small class="text-muted">{{ methodUsed }}</small>
+            </div>
+            <div class="card-body">
+                <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; max-height: 600px; overflow-y: auto;">{{ extractedText }}</pre>
+            </div>
         </div>
     {% endif %}
 
-    <div class="navigation-buttons" style="margin-top: 20px;">
+    {# Navigation #}
+    <div class="navigation-buttons mt-4">
         <a href="{{ path('app_pdf_options', {'filename': filename}) }}" class="btn btn-outline-secondary">
             Back to Options
         </a>
@@ -70,5 +203,54 @@ function copyToClipboard() {
         alert('Failed to copy text: ' + err);
     });
 }
+
+function toggleMetadata() {
+    const panel = document.getElementById('metadataPanel');
+    const button = event.target;
+    
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        button.textContent = 'Hide Metadata';
+    } else {
+        panel.style.display = 'none';
+        button.textContent = 'Show Metadata';
+    }
+}
 </script>
+
+<style>
+.stats-row .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.stats-row .card h3 {
+    margin: 0;
+    color: #007bff;
+}
+.method-selector .badge {
+    font-size: 0.9em;
+}
+.metadata-array {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 5px;
+}
+.metadata-item {
+    padding: 2px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+.metadata-item:last-child {
+    border-bottom: none;
+}
+.metadata-item pre {
+    display: inline;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9em;
+}
+</style>
 {% endblock %}
