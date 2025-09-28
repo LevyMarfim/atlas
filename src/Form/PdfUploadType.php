@@ -20,7 +20,7 @@ class PdfUploadType extends AbstractType
                 'required' => true,
                 'constraints' => [
                     new File([
-                        // 'maxSize' => '1024k',
+                        'maxSize' => '20M',
                         'mimeTypes' => [
                             'application/pdf',
                             'application/x-pdf',
