@@ -15,7 +15,7 @@ class PdfUploadType extends AbstractType
     {
         $builder
             ->add('pdf_file', FileType::class, [
-                'label' => 'PDF File',
+                'label' => 'Arquivo PDF',
                 'mapped' => false,
                 'required' => true,
                 'constraints' => [
@@ -25,10 +25,10 @@ class PdfUploadType extends AbstractType
                             'application/pdf',
                             'application/x-pdf',
                         ],
-                        'mimeTypesMessage' => 'Please upload a valid PDF document',
+                        'mimeTypesMessage' => 'Envie um arquivo PDF válido',
                     ])
                 ],
             ])
-            ->add('upload', SubmitType::class, ['label' => 'Upload PDF']);
+            ->add('upload', SubmitType::class, ['label' => 'Carregar PDF']);
     }
 }

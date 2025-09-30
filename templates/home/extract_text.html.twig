@@ -1,16 +1,16 @@
 {# templates/home/extract_text.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Extracted Text - {{ filename }}{% endblock %}
+{% block title %}Texto extraído - {{ filename }}{% endblock %}
 
 {% block body %}
 <div class="example-wrapper">
-    <h1>Extracted Text from: {{ filename }}</h1>
+    <h1>Texto extraído de: {{ filename }}</h1>
     
     {# Extraction Method Selector #}
     <div class="method-selector card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Extraction Method</h5>
+            <h5 class="mb-0">Método de extração</h5>
         </div>
         <div class="card-body">
             <form method="post" action="{{ path('app_extract_text_method', {'filename': filename}) }}">
@@ -26,13 +26,13 @@
                     </div>
                     <div class="col-md-4">
                         <span class="badge bg-{{ confidence == 'high' ? 'success' : (confidence == 'medium' ? 'warning' : 'danger') }}">
-                            Confidence: {{ confidence|upper }}
+                            Confiabilidade: {{ confidence|upper }}
                         </span>
                     </div>
                 </div>
             </form>
             <small class="text-muted mt-2 d-block">
-                Method used: <strong>{{ methodUsed }}</strong>
+                Método usado: <strong>{{ methodUsed }}</strong>
             </small>
         </div>
     </div>
@@ -44,7 +44,7 @@
                 <div class="card text-center">
                     <div class="card-body">
                         <h3>{{ wordCount }}</h3>
-                        <p class="text-muted mb-0">Words</p>
+                        <p class="text-muted mb-0">Palavras</p>
                     </div>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                 <div class="card text-center">
                     <div class="card-body">
                         <h3>{{ textLength }}</h3>
-                        <p class="text-muted mb-0">Characters</p>
+                        <p class="text-muted mb-0">Caracteres</p>
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
                 <div class="card text-center">
                     <div class="card-body">
                         <h3>{{ lineCount }}</h3>
-                        <p class="text-muted mb-0">Lines</p>
+                        <p class="text-muted mb-0">Linhas</p>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@
                             {% else %}❌
                             {% endif %}
                         </h3>
-                        <p class="text-muted mb-0">Quality</p>
+                        <p class="text-muted mb-0">Qualidade</p>
                     </div>
                 </div>
             </div>
@@ -105,14 +105,14 @@
         <div class="action-buttons mb-4">
             <a href="{{ path('app_download_text', {'filename': filename}) }}?method={{ currentMethod }}" 
                class="btn btn-primary">
-                Download as Text File
+                Baixar arquivo de texto
             </a>
             <button onclick="copyToClipboard()" class="btn btn-secondary">
-                Copy to Clipboard
+                Cpioar para área de transferência
             </button>
             {% if metadata is not empty %}
                 <button onclick="toggleMetadata()" class="btn btn-outline-info">
-                    Show Metadata
+                    Mostrar metadados
                 </button>
             {% endif %}
         </div>
@@ -121,7 +121,7 @@
         {% if metadata is not empty %}
             <div id="metadataPanel" class="card mb-4" style="display: none;">
                 <div class="card-header">
-                    <h5 class="mb-0">PDF Metadata</h5>
+                    <h5 class="mb-0">PDF Metadados</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -160,7 +160,7 @@
         {# Extracted Text #}
         <div class="extracted-text card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Extracted Text</h5>
+                <h5 class="mb-0">Texto extraído</h5>
                 <small class="text-muted">{{ methodUsed }}</small>
             </div>
             <div class="card-body">

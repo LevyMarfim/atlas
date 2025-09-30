@@ -1,36 +1,36 @@
 {# templates/home/pdf_options.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}PDF Options - {{ filename }}{% endblock %}
+{% block title %}PDF - {{ filename }}{% endblock %}
 
 {% block body %}
 <div class="example-wrapper">
-    <h1>PDF Options: {{ filename }}</h1>
+    <h1>POpções para: {{ filename }}</h1>
     
     <div class="options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
         <div class="option-card" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
-            <h3>📄 View PDF</h3>
-            <p>View the PDF file in your browser</p>
+            <h3>📄 Ver PDF</h3>
+            <p>Ver o PDF no navegador</p>
             <a href="{{ path('app_view_pdf', {'filename': filename}) }}" class="btn btn-primary">
-                View PDF
+                Ver PDF
             </a>
         </div>
         
         <div class="option-card" style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
-            <h3>📝 Extract Text</h3>
-            <p>Extract and view the text content from the PDF</p>
+            <h3>📝 Extrair texto</h3>
+            <p>Extrair e ver o conteúdo em texto do PDF</p>
             <a href="{{ path('app_extract_text', {'filename': filename}) }}" class="btn btn-success">
-                Extract Text
+                Extrair texto
             </a>
         </div>
     </div>
 
     <div class="action-buttons" style="text-align: center; margin-top: 20px;">
         <a href="{{ path('app_download_pdf', {'filename': filename}) }}" class="btn btn-secondary">
-            Download PDF
+            Baixar PDF
         </a>
         <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
-            Upload Another PDF
+            Carregar outro PDF
         </a>
     </div>
 
